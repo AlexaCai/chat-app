@@ -1,4 +1,4 @@
-# Chatt app documentation
+# Chat app documentation
 
 **Content**
 
