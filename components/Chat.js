@@ -1,25 +1,31 @@
-//***When the app is started, Screen1 appears with the defined text and button. When user presses the button, the app transition to Screen2. There’s no need to add a button to navigate back to Screen1 here because the Stack.Navigator adds navigation to the top of the screen automatically.
+//***When the app is started, Start Screen appears to users. When users press the 'Start chatting' button on Start Screen, the app transition to Chat Screen (this file). 
 
+//***Import all necessary components the ensure app's working
 import { useEffect } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 
-//***''route'' is a prop and was set to all screen components listed under Stack.Navigator when defined in App.js file.
+//***Defines the React component named ChatScreen that takes two props: route and navigation. 
+//***These props are provided by React Navigation to screen components. 'route' allows to access the data passed to this screen during navigation (in this case, from Start Screen), and 'navigation' allows to navigate to other screens.
 const ChatScreen = ({ route, navigation }) => {
 
-    const { name } = route.params;
+    //***Extract the 'name' and 'selectedColor' properties from the route.params object. Those two data (user selected name and background color) were passed as parameters from Start Screen to Chat Screen when navigating to Chat Screen (so when users click on 'Start chatting' button on Start Screen).
+    const { name, selectedColor } = route.params;
 
+    //***Sets the title of the screen (in the header at the top) to the value of the 'name' parameter using navigation.setOptions({ title: name }) (so the title of the screen is dynamically updated based on the name chosen by users in InputText on Start Screen).
     useEffect(() => {
         navigation.setOptions({ title: name });
-        //***Empty array as the second parameter to ensure it doesn't rely on any state changes of that component (the code inside useEffect will be called only once, right after the component is mounted).
+        //***Empty array as the second parameter ensures that the code inside useEffect (which sets the screen title) runs only once when the component is mounted, and that it won't be influenced by any state changes in this component (Chat.js).
     }, []);
 
     return (
-        <View style={styles.container}>
+        //***Return here what's shown on Chat Screen UI.
+        <View style={[styles.container, { backgroundColor: selectedColor }]}>
             <Text>Hello Screen2!</Text>
         </View>
     );
 }
 
+//***Styling logics for all elements appearing on Chat Screen.
 const styles = StyleSheet.create({
     container: {
         flex: 1,
