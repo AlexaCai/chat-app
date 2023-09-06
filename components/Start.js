@@ -23,7 +23,7 @@ const StartScreen = ({ navigation }) => {
     );
 }
 
-//*
+//***Styling commands
 const styles = StyleSheet.create({
     container: {
         flex: 1,
