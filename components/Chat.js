@@ -6,7 +6,7 @@ import { StyleSheet, View, Text } from 'react-native';
 //***''route'' is a prop and was set to all screen components listed under Stack.Navigator when defined in App.js file.
 const ChatScreen = ({ route, navigation }) => {
 
-    const { name } = route.params;
+    const { name, selectedColor } = route.params;
 
     useEffect(() => {
         navigation.setOptions({ title: name });
@@ -14,7 +14,7 @@ const ChatScreen = ({ route, navigation }) => {
     }, []);
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: selectedColor }]}>
             <Text>Hello Screen2!</Text>
         </View>
     );
