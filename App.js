@@ -13,11 +13,12 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-      //***First screen to load upon starting the app. This prop’s value should be the name of one of the Stack.Screens.
+        //***First screen to load upon starting the app. This prop’s value should be the name of one of the Stack.Screens.
         initialRouteName="StartScreen"
       >
         <Stack.Screen
-          name="StartScreen"
+          //***options={{ headerShown: false }} ensure that the name of the screen doesnt appears in the navigation header on the start screen.
+          name="StartScreen" options={{ headerShown: false }}
           component={StartScreen}
         />
         <Stack.Screen
