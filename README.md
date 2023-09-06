@@ -37,25 +37,25 @@ For the app's development phase, the following user stories have been used:
 ### User story 1
 
 > As a new **user**,   
-> I want to be able to **easily enter a chat room**,
+> I  want to be able to **easily enter a chat room**, 
 > So that I can **quickly start talking to my friends and family**.
 
 ### User story 2
 
-> As a **user**,   
+> As a **user**,
 > I want to be able to **send messages to my friends and family members**,
 > So that **I can exchange the latest news**.
 
 ### User story 3
 
-> As a **user**,   
+> As  a **user**, 
 > I want to **send images to my friends** ,
 > So that **I can show them what I’m currently doing**.
 
 ### User story 4
 
-> As a **user**,   
-> I want to **share my location with my friends**, 
+> As  a **user**,  
+> I want to **share my location with my friends**,  
 > So that **I can show them where I am**.
 
 ### User story 5
