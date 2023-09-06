@@ -30,7 +30,7 @@ When users land on Chat app, the initial page allows them to enter their name, a
 
 In the chat screen (TO BE COMPLETED).
 
-## User stories and scenarios
+## User stories
 
 For the app's development phase, the following user stories have been used:
 
