@@ -1,8 +1,9 @@
 //***When the app is started, Start Screen appears to users (this file). When users press the 'Start chatting' button on Start Screen, the app transition to Chat Screen. 
 
 //***Import all necessary components the ensure app's working.
+//***KeyboardAvoidingView and Platform from 'react-native' are used to ensured that when users launch their keyboard to enter any text in the start screen, the keyboard won't hides the name and background color picker form (problem for iOS / Iphone mobile models).
 import { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ImageBackground } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform } from 'react-native';
 
 const StartScreen = ({ navigation }) => {
 
@@ -35,7 +36,7 @@ const StartScreen = ({ navigation }) => {
                     <View style={styles.chatBackgroundColorContainer}>
                         {/* Button to choose the Chat Screen black background color. */}
                         <TouchableOpacity style={styles.chatBackgroundColorBlackButton}
-                        //***When user clicks on this button (onPress), setSelectedColor is used to update the selectedColor value in 'const selectedColor, setSelectedColor' useState above (and this updated value is later used to set up the Chat Screen background color accordingly).
+                            //***When user clicks on this button (onPress), setSelectedColor is used to update the selectedColor value in 'const selectedColor, setSelectedColor' useState above (and this updated value is later used to set up the Chat Screen background color accordingly).
                             onPress={() => {
                                 setSelectedColor("#090C08");
                             }}>
@@ -72,6 +73,8 @@ const StartScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
+            {/* Code logic ensuring that if the platform’s OS used to run the app is iOS, the component KeyboardAvoidingView is added (which will ensure that when users launch their keyboard to enter any text in the start screen, the keyboard won't hides the input field or the background color picker section - problem only occuring with Iphone / iOS mobile models). If OS is not an iOS, logic tells to insert nothing. */}
+            {Platform.OS === 'ios' ? <KeyboardAvoidingView behavior="padding" /> : null}
         </View>
     );
 }
