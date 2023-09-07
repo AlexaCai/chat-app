@@ -21,6 +21,7 @@ const ChatScreen = ({ route, navigation }) => {
         navigation.setOptions({ title: name });
         //***Messages must follow a certain format to work with the Gifted Chat library. Each message requires an ID, a creation date, and a user object (and the user object requires a user ID, name, and avatar).
         setMessages([
+            //***Static message shown when opening Chat Screen.
             {
                 _id: 1,
                 text: "Hello developer",
@@ -31,7 +32,7 @@ const ChatScreen = ({ route, navigation }) => {
                     avatar: "https://placeimg.com/140/140/any",
                 },
             },
-            //***Code to implement a system message(messages aren’t sent by any chat participants - they are automatic messages used to alert the participants about activity in the chat).
+            //***System message shown when opening Chat Screen (system messages aren’t sent by any chat participants - they are automatic messages used to alert the participants about activity in the chat).
             {
                 _id: 2,
                 text: 'This is a system message',
@@ -47,7 +48,6 @@ const ChatScreen = ({ route, navigation }) => {
         //***The append() function provided by GiftedChat appends the new message to the newMessages array (array which holds the message user just sent), and this message gets appended to the original list of messages from previousMessages, so that all messages (new and older ones) can be displayed in the chat.
         setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages))
     }
-
 
     //***Used to change the messages bubble color.
     const renderBubble = (props) => {
@@ -71,7 +71,7 @@ const ChatScreen = ({ route, navigation }) => {
     return (
         <View style={styles.container}>
             <GiftedChat
-                //***Provide GiftedChat with the messages.
+                //***Provide GiftedChat with the messages from the 'messages' state.
                 messages={messages}
                 //***Used to change the messages bubble color.
                 renderBubble={renderBubble}
