@@ -69,7 +69,7 @@ const ChatScreen = ({ route, navigation }) => {
 
     //***Code rendering the chat interface. Gifted Chat provides its own component, GiftedChat, that comes with its own props. 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: selectedColor }]}>
             <GiftedChat
                 //***Provide GiftedChat with the messages from the 'messages' state.
                 messages={messages}
