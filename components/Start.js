@@ -3,9 +3,14 @@
 //***Import all necessary components the ensure app's working.
 //***KeyboardAvoidingView and Platform from 'react-native' are used to ensured that when users launch their keyboard to enter any text in the start screen, the keyboard won't hides the name and background color picker form (problem for iOS / Iphone mobile models).
 import { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { getAuth, signInAnonymously } from "firebase/auth";
+
 
 const StartScreen = ({ navigation }) => {
+
+    //***Initialize the Firebase authentication handler (needed for signInAnonymously()) at the start of the component).
+    const auth = getAuth();
 
     //***Used to get the name user types in the TextInput and display it on the header of the Chat Screen (via props extraction in Chat.js).
     const [name, setName] = useState('');
@@ -13,6 +18,25 @@ const StartScreen = ({ navigation }) => {
     const [selectedColor, setSelectedColor] = useState('');
     //***Used to requiere the background image for the Start Screen (const image used below to display it).
     const image = require('../img/BackgroundImage.png');
+
+    //***Function call when user click 'Start chatting' button on the start screen. This 'const signInUser' allows the user to sign in anonymously.
+    const signInUser = () => {
+        //***signInAnonymously() returns a promise, with .then() and .catch() to it.
+        signInAnonymously(auth)
+            //*** 'result' is an information object regarding the temporary user account.
+            .then(result => {
+                //***Once the user is signed in (by clicking on 'Start chatting' button), the app navigates to the Chat screen while passing result.user.uid (which is assigned to the route parameter userID). This user ID is used to personalize the chat messages users view and add to the Chat screen (users are only able to see the messages that match their user UID).
+                navigation.navigate("ChatScreen", {
+                    userID: result.user.uid,
+                    name: name,
+                    selectedColor: selectedColor,
+                });
+                Alert.alert("Signed in Successfully!");
+            })
+            .catch((error) => {
+                Alert.alert("Unable to sign in, try later again.");
+            })
+    }
 
     return (
         //***Initial container for the whole screen.
@@ -67,8 +91,8 @@ const StartScreen = ({ navigation }) => {
                     {/* Button for user to click on and be redirected to Chat Screen. */}
                     <TouchableOpacity
                         style={styles.startChattingButton}
-                        //***When user click on the button (onPress), navigation is called, and tells the navigation logic to navigate to the 'ChatScreen' screen and pass some data along with it (name and background color selected by the user). 'ChatScreen' screen can then access this data using the props passed to it (see Chat.js file).
-                        onPress={() => navigation.navigate('ChatScreen', { name: name, selectedColor: selectedColor })}>
+                        //***When user click on the button (onPress), signInUser is called (see above where the function is defined). It also pass some data to the Chat screen along with it (name and background color selected by the user). 'ChatScreen' screen can then access this data using the props passed to it (see Chat.js file).
+                        onPress={signInUser}>
                         <Text style={styles.buttonText}>Start chatting</Text>
                     </TouchableOpacity>
                 </View>
