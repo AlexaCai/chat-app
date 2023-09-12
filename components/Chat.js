@@ -4,13 +4,14 @@
 //***KeyboardAvoidingView and Platform from 'react-native' are used to ensured that when users launch their keyboard to enter any text in the chat screen, the keyboard won't hides the message input field (problem only occuring in older Android mobile models).
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
-import { GiftedChat, Bubble } from "react-native-gifted-chat";
+import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 //***Defines the component ChatScreen that takes three props: route, navigation and db. 
 //***These props are provided by React Navigation to screen components. 'route' allows to access the data passed to this screen during navigation (in this case, from Start Screen), and 'navigation' allows to navigate to other screens.
-const ChatScreen = ({ route, navigation, db }) => {
+const ChatScreen = ({ route, navigation, db, isConnected }) => {
 
     //***Extract the 'userUID', 'name' and 'selectedColor' properties from the route.params object. These data were passed as parameters from StartScreen to ChatScreen when navigating to ChatScreen (so when users click on 'Start chatting' button on StartScreen).
     const { userID, name, selectedColor } = route.params;
@@ -19,33 +20,63 @@ const ChatScreen = ({ route, navigation, db }) => {
     //***'setMessage' is used to update the 'messages' state. When a new message is sent or received, it is appended to the 'messages' array using the 'setMessages' function. This ensures that the chat interface displays the most up-to-date messages.
     const [messages, setMessages] = useState([]);
 
+    //***Variable is used to keep a reference to the unsubscribe function returned by the onSnapshot listener from Firebase Firestore.
+    let unsubMessages;
 
     //***useEffect called right after the Chat component mounts. 
     useEffect(() => {
         //***Sets the title of the screen (in the header at the top) to the value of the 'name' parameter using navigation.setOptions({ title: name }) (so the title of the screen is dynamically updated based on the name chosen by users in InputText on StartScreen).
         navigation.setOptions({ title: name });
 
-        //***The code sets up a real-time listener for chat messages stored in a Firestore database.
-        const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
-        //***'onSnapshot' function continuously watch for changes in the messages collection in Firestore.
-        const unsubMessages = onSnapshot(q, (documentsSnapshot) => {
-            //***When there's a new chat messages (either sent by the user or received from others), the code processes this message and updates the 'messages' state, which contains all chat messages and is used to display the chat history on the screen.
-            let newMessages = [];
-            documentsSnapshot.forEach(doc => {
-                newMessages.push({
-                    id: doc.id, ...doc.data(),
-                    createdAt: new Date(doc.data().createdAt.toMillis())
-                })
-            })
-            setMessages(newMessages);
-        })
+        //***Fetch messages from the Firestore Database only if there’s a network connection - otherwise, call loadCachedLists().
+        if (isConnected === true) {
+
+            //***Whenever the connection status is switched off and then back on again, new onSnapshot() listeners are created. To avoid this, onSnapshot’s unsubscribe function is called and his reference is sets to null before calling onSnapshot().
+            if (unsubMessages) unsubMessages();
+            unsubMessages = null;
+
+            //***The code sets up a real-time listener for chat messages stored in a Firestore database.
+            const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+            //***'onSnapshot' function continuously watch for changes in the messages collection in Firestore.
+            unsubMessages = onSnapshot(q, (documentsSnapshot) => {
+                //***When there's a new chat messages (either sent by the user or received from others), the code processes this message and updates the 'messages' state, which contains all chat messages and is used to display the chat history on the screen.
+                let newMessages = [];
+                documentsSnapshot.forEach(doc => {
+                    newMessages.push({
+                        id: doc.id, ...doc.data(),
+                        createdAt: new Date(doc.data().createdAt.toMillis())
+                    });
+                });
+                cacheMessages(newMessages);
+                setMessages(newMessages);
+            });
+            //***Fetch messages from the cache only if there’s no network connection.
+        } else loadCachedMessages();
 
         //***Used to clean up code and stops the real-time message listener when the chat screen is no longer in use to avoid memory leaks (it’s best practice to stop listeners if they’re no longer needed to avoid memory leak - memory leak occurs when data that isn't needed still occupies memory without intending to do so).
         return () => {
-            if (unsubMessages) unsubMessages();
+            if (unsubMessages) {
+                unsubMessages();
+              }
         }
-    }, []);
+        //***isConnected prop as a dependency allowing the component to call the callback of useEffect whenever the isConnected prop’s value change (so whenever user lost / retrieve internet connection). Then the code can decide in real time whether to fetch data from AsyncStorage or the Firestore Database.
+    }, [isConnected]);
 
+    //***Asyn function called/used if the 'isConnected' prop (passed from App.js) is false. This load cached elements (messages) from AsyncStorage.getItem("messages").
+    const loadCachedMessages = async () => {
+        //*** || [] (equal to OR) in the code below assign an empty array to cachedLists in case AsyncStorage.getItem("messages") fails when the messages item hasn’t been set yet in AsyncStorage.
+        const cachedMessages = await AsyncStorage.getItem("messages") || [];
+        setMessages(JSON.parse(cachedMessages));
+    }
+
+    //***Function called inside onSnapshot()’s callback. Whenever 'query(collection(db, "shoppinglists"), orderBy("createdAt", "desc"));' is changed by an add, remove, or update query, the onSnapshot() callback cacheMessages is be called. This means the cache will be kept up to date as long as there’s an internet connection.
+    const cacheMessages = async (MessagesToCache) => {
+        try {
+          await AsyncStorage.setItem('messages', JSON.stringify(MessagesToCache));
+        } catch (error) {
+          console.log(error.message);
+        }
+      }
 
     //***Function to save/show sent messages in the Firestore database.
     const onSend = (messages) => {
@@ -54,6 +85,15 @@ const ChatScreen = ({ route, navigation, db }) => {
         //***The message to be added in the Firestore dabatase (using addDoc) is the first item in the newMessages array, which is the argument of the onSend function. That's why newMessages[0] is used here as the third argument. This code ensures that chat messages are persisted and can be retrieved from Firestore database.
         addDoc(collection(db, "messages"), messages[0])
     }
+
+    //***Function used to prevent Gifted Chat from rendering the InputToolbar (which contains the input field and the "Send" button) when offline / no internet, so users can’t compose new messages.
+    //***Similar to renderBubble, to change Gifted Chat’s InputToolbar, this code override the default prop renderInputToolbar={...} of the <GiftedChat …/> component with the new logic wanted.
+    const renderInputToolbar = (props) => {
+        if (isConnected) 
+        return <InputToolbar 
+        {...props} />;
+        else return null;
+       }
 
     //***Used to change the messages bubble color.
     //***The returned Bubble component is from Gifted Chat’s own package so its necessary to first import it (Bubble package).
@@ -82,6 +122,8 @@ const ChatScreen = ({ route, navigation, db }) => {
                 messages={messages}
                 //***Used to change the messages bubble color (linked to the 'const renderBublle' above).
                 renderBubble={renderBubble}
+                //***Used to hide the input bar / send button when there's not connection, and render it when there's connection (see function 'constrenderInputToolbar above).
+                renderInputToolbar={renderInputToolbar}
                 //***Tell GiftedChat what should happen when the user sends a new message / click send (onSend() function is called).
                 onSend={messages => onSend(messages)}
                 //***Provide GitedChat the information about the sender.
