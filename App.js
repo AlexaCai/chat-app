@@ -1,21 +1,43 @@
 //***Import necessary components.
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+//***useNetInfo is used to determine whether a user is online or not.
+import { useNetInfo } from '@react-native-community/netinfo';
+import { useEffect } from "react";
+import { Alert } from "react-native";
 
 //***Create the navigator
 const Stack = createNativeStackNavigator();
 
 //***Import necessary components.
 import { initializeApp } from "firebase/app";
-import { initializeFirestore } from "firebase/firestore";
+import { initializeFirestore, disableNetwork, enableNetwork } from "firebase/firestore";
 // import { getFirestore } from "firebase/firestore";
 
 //***Import the screens.
 import StartScreen from './components/Start';
 import ChatScreen from './components/Chat';
 
+//***Defines the component App. 
 const App = () => {
-//***Configuration keys and all other codes below are taken from Firestore website, and they allow the whole app to connect to the app's Firestore database.
+
+  //***Used to define a new state that represents the network connectivity status of the user.
+  const connectionStatus = useNetInfo();
+
+  //***useEffect() code that display an alert popup if internet connection is lost.
+  //***In Android, Firebase keep attempting to reconnect to the Firestore Database.
+  useEffect(() => {
+    //***To disable Firebase attempts to reconnect to Firestore database when there's no internet, the Firestore function 'disableNetwork(db)' is called when '.isConnected' is 'false'. 
+    if (connectionStatus.isConnected === false) {
+      Alert.alert("Connection Lost!");
+      disableNetwork(db);
+      //***To re-enable Firestore database when internet is back, the Firestore function 'enableNetwork(db)' is called when '.isConnected' is 'true'.
+    } else if (connectionStatus.isConnected === true) {
+      enableNetwork(db);
+    }
+  }, [connectionStatus.isConnected]);
+
+  //***Configuration keys and all other codes below are taken from Firestore website, and they allow the whole app to connect to the app's Firestore database.
   const firebaseConfig = {
     apiKey: "AIzaSyBlOjdblDrLxZJ92Nl2hHM3Nc_uj-V01NQ",
     authDomain: "chat-app-61899.firebaseapp.com",
@@ -50,9 +72,10 @@ const App = () => {
         />
         <Stack.Screen
           name="ChatScreen"
-          >
+        >
+          {/* The 'connectionStatus.isConnected' is passed as a prop to the ChatScreen so this information (user connected to internet or not) can be used in that screen/file/component. */}
           {/* Passing the 'db' as a prop to ChatScreen so the db prop variable can be accessed in Chat.js. This way of passing prop is specific to the React Navigation library (see libary documentation for more info). */}
-          {props => <ChatScreen db={db} {...props} />}
+          {props => <ChatScreen isConnected={connectionStatus.isConnected} db={db} {...props} />}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
