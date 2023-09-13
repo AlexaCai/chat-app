@@ -1,31 +1,34 @@
-//***When the app is started, StartScreen appears to users (this file). When users press the 'Start chatting' button on Start Screen, the app transition to the ChatScreen. 
+//***When the app is started, StartScreen appears to users (this file). When users press the 'Start chatting' button on StartScreen, the app transition to the ChatScreen. 
 
-//***Import all necessary components the ensure app's working.
-//***KeyboardAvoidingView and Platform from 'react-native' are used to ensured that when users launch their keyboard to enter any text in the start screen, the keyboard won't hides the name and background color picker form (problem for iOS / Iphone mobile models).
+//***Import all necessary components.
 import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { getAuth, signInAnonymously } from "firebase/auth";
 
-//***Defines the component StartScreen. This component renders the user interface of the StartScreen. It takes one prop: navigation.
+
+//***Defines the component StartScreen. This component renders the user interface of the StartScreen. 
 const StartScreen = ({ navigation }) => {
+
 
     //***Initialize the Firebase authentication handler (needed for signInAnonymously()) at the start of the component).
     const auth = getAuth();
 
+
     //***Used to get the name user types in the TextInput and display it on the header of the Chat Screen (via props extraction in Chat.js).
     const [name, setName] = useState('');
-    //***Used to get the background user choose on the Start Screen and display it on the Chat Screen background (via props extraction in Chat.js).
+    //***Used to get the background user choose and display it on the Chat Screen background (via props extraction in Chat.js).
     const [selectedColor, setSelectedColor] = useState('');
-    //***Used to requiere the background image for the Start Screen (const image used below to display it).
+    //***Used to requiere the background image for the Start Screen ('const image' is used below to display it).
     const image = require('../img/BackgroundImage.png');
+
 
     //***Function call when user click 'Start chatting' button on the start screen. This 'const signInUser' allows the user to sign in anonymously.
     const signInUser = () => {
-        //***signInAnonymously() returns a promise, with .then() and .catch() to it.
+        //***signInAnonymously() returns a promise.
         signInAnonymously(auth)
-            //*** 'result' is an information object regarding the temporary user account.
+            //***'result' is an information object regarding the temporary user account.
             .then(result => {
-                //***Once the user is signed in (by clicking on 'Start chatting' button), the app navigates to the ChatScreen while passing result.user.uid (which is assigned to the route parameter userID). This user UID is used to personalize the chat messages users view and add to the ChatScreen (users are only able to see the messages that match their user UID). The name and background color choose by the user is also passed at the same time to be rendered in the ChatScreen.
+                //***Once the user is signed in, the app navigates to the ChatScreen while passing result.user.uid (which is assigned to the route parameter userID). This userID is used to personalize the chat messages users view and add to the ChatScreen (users are only able to see the messages that match their userID). The name and background color choose by the user is also passed at the same time to be rendered in the ChatScreen.
                 navigation.navigate("ChatScreen", {
                     userID: result.user.uid,
                     name: name,
@@ -38,11 +41,11 @@ const StartScreen = ({ navigation }) => {
             })
     }
 
+
     //***'return" defines the structure of the screen (title, input box, button, etc).
     return (
-        //***Initial container for the whole screen.
         <View style={styles.container}>
-            {/* Background image inserted here to display it on app's background (source={image} referring to the 'const image' defined above). */}
+            {/* Background image inserted here to display it on app's Start screen background (source={image} referring to the 'const image' defined above). */}
             <ImageBackground source={image} resizeMode="cover" style={styles.image}>
                 <Text style={styles.appTitle}>Chat App</Text>
                 {/* View added here to apply stylings to the interaction zone on app's Start Screen (TextInput, color choosing, start chatting button). */}
@@ -98,13 +101,14 @@ const StartScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
-            {/* Code logic ensuring that if the platform’s OS used to run the app is iOS, the component KeyboardAvoidingView is added (which will ensure that when users launch their keyboard to enter any text in the start screen, the keyboard won't hides the input field or the background color picker section - problem only occuring with Iphone / iOS mobile models). If OS is not an iOS, logic tells to insert nothing. */}
+            {/* Code logic ensuring that if the platform’s OS used to run the app is iOS, the component KeyboardAvoidingView is added (which will ensure that when users launch their keyboard to enter any text, the keyboard won't hides the input field or the background color picker section - problem only occuring with Iphones / iOS mobile models). If OS is not an iOS, logic tells to insert nothing. */}
             {Platform.OS === 'ios' ? <KeyboardAvoidingView behavior="padding" /> : null}
         </View>
     );
 }
 
-//***Styling logics for all elements appearing on StartScreen.
+
+//***Styling logics for all elements in this file.
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -208,5 +212,6 @@ const styles = StyleSheet.create({
         textAlign: "center"
     },
 });
+
 
 export default StartScreen;
