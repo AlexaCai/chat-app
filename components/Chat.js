@@ -8,6 +8,10 @@ import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+//***Import CustomActions to use his functionnalities here.
+import CustomActions from './CustomActions';
+
+import MapView from 'react-native-maps';
 
 //***Defines the component ChatScreen that takes three props: route, navigation and db. 
 //***These props are provided by React Navigation to screen components. 'route' allows to access the data passed to this screen during navigation (in this case, from Start Screen), and 'navigation' allows to navigate to other screens.
@@ -57,10 +61,11 @@ const ChatScreen = ({ route, navigation, db, isConnected }) => {
         return () => {
             if (unsubMessages) {
                 unsubMessages();
-              }
+            }
         }
         //***isConnected prop as a dependency allowing the component to call the callback of useEffect whenever the isConnected prop’s value change (so whenever user lost / retrieve internet connection). Then the code can decide in real time whether to fetch data from AsyncStorage or the Firestore Database.
     }, [isConnected]);
+
 
     //***Asyn function called/used if the 'isConnected' prop (passed from App.js) is false. This load cached elements (messages) from AsyncStorage.getItem("messages").
     const loadCachedMessages = async () => {
@@ -69,14 +74,16 @@ const ChatScreen = ({ route, navigation, db, isConnected }) => {
         setMessages(JSON.parse(cachedMessages));
     }
 
+
     //***Function called inside onSnapshot()’s callback. Whenever 'query(collection(db, "shoppinglists"), orderBy("createdAt", "desc"));' is changed by an add, remove, or update query, the onSnapshot() callback cacheMessages is be called. This means the cache will be kept up to date as long as there’s an internet connection.
     const cacheMessages = async (MessagesToCache) => {
         try {
-          await AsyncStorage.setItem('messages', JSON.stringify(MessagesToCache));
+            await AsyncStorage.setItem('messages', JSON.stringify(MessagesToCache));
         } catch (error) {
-          console.log(error.message);
+            console.log(error.message);
         }
-      }
+    }
+
 
     //***Function to save/show sent messages in the Firestore database.
     const onSend = (messages) => {
@@ -86,14 +93,46 @@ const ChatScreen = ({ route, navigation, db, isConnected }) => {
         addDoc(collection(db, "messages"), messages[0])
     }
 
+
+    //***renderCustomActions function is responsible for creating the circle button (+) in input bar on which user can click to do more actions (share images, take images or share location).
+    const renderCustomActions = (props) => {
+        //***Pass the props to the CustomActions component. This props object contains Gifted Chat’s onSend() method - so CustomActions have access to onSend().
+        return <CustomActions {...props} />;
+    };
+
+
+    //***'renderCustomView' function is where the 'currentMessage' is check to see if it contains location data. If the answer is yes, it returns a MapView.
+    const renderCustomView = (props) => {
+        const { currentMessage } = props;
+        if (currentMessage.location) {
+            return (
+                <MapView
+                    style={{
+                        width: 150,
+                        height: 100,
+                        borderRadius: 13,
+                        margin: 3
+                    }}
+                    region={{
+                        latitude: currentMessage.location.latitude,
+                        longitude: currentMessage.location.longitude,
+                        latitudeDelta: 0.0922,
+                        longitudeDelta: 0.0421,
+                    }}
+                />
+            );
+        }
+        return null;
+    }
+
     //***Function used to prevent Gifted Chat from rendering the InputToolbar (which contains the input field and the "Send" button) when offline / no internet, so users can’t compose new messages.
     //***Similar to renderBubble, to change Gifted Chat’s InputToolbar, this code override the default prop renderInputToolbar={...} of the <GiftedChat …/> component with the new logic wanted.
     const renderInputToolbar = (props) => {
-        if (isConnected) 
-        return <InputToolbar 
-        {...props} />;
+        if (isConnected)
+            return <InputToolbar
+                {...props} />;
         else return null;
-       }
+    }
 
     //***Used to change the messages bubble color.
     //***The returned Bubble component is from Gifted Chat’s own package so its necessary to first import it (Bubble package).
@@ -126,6 +165,10 @@ const ChatScreen = ({ route, navigation, db, isConnected }) => {
                 renderInputToolbar={renderInputToolbar}
                 //***Tell GiftedChat what should happen when the user sends a new message / click send (onSend() function is called).
                 onSend={messages => onSend(messages)}
+                //***
+                renderActions={renderCustomActions}
+                //***
+                renderCustomView={renderCustomView}
                 //***Provide GitedChat the information about the sender.
                 user={{
                     _id: userID,
