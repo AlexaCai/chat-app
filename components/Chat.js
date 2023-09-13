@@ -15,7 +15,7 @@ import MapView from 'react-native-maps';
 
 //***Defines the component ChatScreen that takes three props: route, navigation and db. 
 //***These props are provided by React Navigation to screen components. 'route' allows to access the data passed to this screen during navigation (in this case, from Start Screen), and 'navigation' allows to navigate to other screens.
-const ChatScreen = ({ route, navigation, db, isConnected }) => {
+const ChatScreen = ({ route, navigation, db, isConnected, storage }) => {
 
     //***Extract the 'userUID', 'name' and 'selectedColor' properties from the route.params object. These data were passed as parameters from StartScreen to ChatScreen when navigating to ChatScreen (so when users click on 'Start chatting' button on StartScreen).
     const { userID, name, selectedColor } = route.params;
@@ -94,10 +94,11 @@ const ChatScreen = ({ route, navigation, db, isConnected }) => {
     }
 
 
-    //***renderCustomActions function is responsible for creating the circle button (+) in input bar on which user can click to do more actions (share images, take images or share location).
+    //***renderCustomActions function is responsible for creating the circle button (+) in input bar on which user can click to do more actions such as share images, take images or share location.
     const renderCustomActions = (props) => {
         //***Pass the props to the CustomActions component. This props object contains Gifted Chat’s onSend() method - so CustomActions have access to onSend().
-        return <CustomActions {...props} />;
+        //***'storage' props is passed here so that it can be used in the place where picking images and taking photos takes place.
+        return <CustomActions storage={storage} {...props} />;
     };
 
 

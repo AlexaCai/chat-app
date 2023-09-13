@@ -1,6 +1,7 @@
 //***Import necessary components.
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
 //***useNetInfo is used to determine whether a user is online or not.
 import { useNetInfo } from '@react-native-community/netinfo';
 import { useEffect } from "react";
@@ -12,6 +13,7 @@ const Stack = createNativeStackNavigator();
 //***Import necessary components.
 import { initializeApp } from "firebase/app";
 import { initializeFirestore, disableNetwork, enableNetwork } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 // import { getFirestore } from "firebase/firestore";
 
 //***Import the screens.
@@ -58,6 +60,9 @@ const App = () => {
     experimentalForceLongPolling: true
   })
 
+  //***Used to  initialize the storage handler (for storing photos and images).
+  const storage = getStorage(app);
+
   //***'return" defines the structure of the app, specifying how the navigation and screens are organized and connected. When the app is run, this structure is rendered, and users interact with the screens as defined in this block of code.
   return (
     <NavigationContainer>
@@ -74,8 +79,8 @@ const App = () => {
           name="ChatScreen"
         >
           {/* The 'connectionStatus.isConnected' is passed as a prop to the ChatScreen so this information (user connected to internet or not) can be used in that screen/file/component. */}
-          {/* Passing the 'db' as a prop to ChatScreen so the db prop variable can be accessed in Chat.js. This way of passing prop is specific to the React Navigation library (see libary documentation for more info). */}
-          {props => <ChatScreen isConnected={connectionStatus.isConnected} db={db} {...props} />}
+          {/* Passing the 'db' and 'storage' as props to ChatScreen so these props can be accessed in Chat.js. This way of passing props is specific to the React Navigation library (see libary documentation for more info). */}
+          {props => <ChatScreen isConnected={connectionStatus.isConnected} db={db} storage={storage} {...props} />}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
