@@ -229,7 +229,13 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
 
     return (
         //***When users click on the (+) button on the left side of the text input bar, 'onActionPress' function is called.
-        <TouchableOpacity style={styles.container} onPress={onActionPress}>
+        <TouchableOpacity
+            style={styles.container}
+            accessible={true}
+            accessibilityLabel="More options"
+            accessibilityHint="Lets you choose to send an image, take a picture, share your geolocation or send an audio."
+            accessibilityRole="button"
+            onPress={onActionPress}>
             <View style={[styles.wrapper, wrapperStyle]}>
                 <Text style={[styles.iconText, iconTextStyle]}>+</Text>
             </View>
