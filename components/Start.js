@@ -4,6 +4,8 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { getAuth, signInAnonymously } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 
 //***Defines the component StartScreen. This component renders the user interface of the StartScreen. 
@@ -21,25 +23,49 @@ const StartScreen = ({ navigation }) => {
     //***Used to requiere the background image for the Start Screen ('const image' is used below to display it).
     const image = require('../img/BackgroundImage.png');
 
-
     //***Function call when user click 'Start chatting' button on the start screen. This 'const signInUser' allows the user to sign in anonymously.
-    const signInUser = () => {
-        //***signInAnonymously() returns a promise.
-        signInAnonymously(auth)
-            //***'result' is an information object regarding the temporary user account.
-            .then(result => {
-                //***Once the user is signed in, the app navigates to the ChatScreen while passing result.user.uid (which is assigned to the route parameter userID). This userID is used to personalize the chat messages users view and add to the ChatScreen (users are only able to see the messages that match their userID). The name and background color choose by the user is also passed at the same time to be rendered in the ChatScreen.
-                navigation.navigate("ChatScreen", {
-                    userID: result.user.uid,
-                    name: name,
-                    selectedColor: selectedColor,
+    const signInUser = async () => {
+        let userId = await AsyncStorage.getItem("userId");
+
+        //***If there's no user ID locally stored on the device (first time user), a new user ID is assigned to the user, and this user ID is stored locally on his device. The next time user will go on the app, this same user UI will be used to sign in.
+        if (!userId) {
+            //*** If user ID not found locally, Firebase authentication is used to generate a new one.
+            signInAnonymously(auth)
+                //***'result' is an information object regarding the temporary user account.
+                .then(result => {
+                    //***Assign the Firebase user ID to userId.
+                    userId = result.user.uid;
+                    //***Store the new Firebase user ID locally for future sessions.
+                    AsyncStorage.setItem("userId", userId)
+                        .then(() => {
+                            //***After storing the user ID locally, navigate to the ChatScreen.
+                            navigation.navigate("ChatScreen", {
+                                userID: userId,
+                                name: name,
+                                selectedColor: selectedColor,
+                            });
+                            Alert.alert("Signed in Successfully!");
+                        })
+                        .catch(error => {
+                            console.error("Error storing user ID locally:", error);
+                            Alert.alert("Unable to sign in, try again later.");
+                        });
+                })
+                .catch((error) => {
+                    console.error("Error signing in anonymously:", error);
+                    Alert.alert("Unable to sign in, try again later.");
                 });
-                Alert.alert("Signed in Successfully!");
-            })
-            .catch((error) => {
-                Alert.alert("Unable to sign in, try later again.");
-            })
+            //***If user is not at his first visit on the app, he already have his user ID stored locally to sign in. This user ID is used.
+        } else {
+            //***Using the user ID stored locally, navigate to chat screen after user click on 'Start chatting' button.
+            navigation.navigate("ChatScreen", {
+                userID: userId,
+                name: name,
+                selectedColor: selectedColor,
+            });
+        }
     }
+
 
 
     //***'return" defines the structure of the screen (title, input box, button, etc).
