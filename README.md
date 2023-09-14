@@ -28,7 +28,7 @@ in the world. Building one and knowing how it works, especially using React Nati
 
 When users open Chat app, the initial page allows them to enter their name, as well as selecting the background color they would like to have on the chat screen. Once these elements are specified, users can click on a button to be redirected to the chat screen.
 
-In the chat screen, users can use a text input field to send messages. All messages sent are displayed on the right side of the screen, while all messages received are displayed on the left side of the screen. On the left side of the text input bar, users can click on a (+) button, allowing them to do more actions:
+In the chat screen, users can use a text input field to send messages. All messages sent are displayed on the right side of the screen, while all messages received are displayed on the left side of the screen. On the left side of the text input bar, users can click on a (+) button (coded with accessibility props and descriptive text so that users with screen readers can understand its purpose), allowing them to do more actions:
 
  - Send an image from their phone's library;
  - Take a picture with their phone's camera and send it;
