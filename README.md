@@ -158,14 +158,14 @@ This database is then linked/connected to Chat app by inserting (in App.js file,
 
 **3- Authentication method:** The same principle applies for the authentication method. The authentication method  is created on *Firebase* website, by going to *Build* > *Authentication*. For Chat app, the [anonymous authentication provided by *Firebase*](https://firebase.google.com/docs/auth/web/anonymous-auth#authenticate-with-firebase-anonymously) is used. This type of authentication revolves around two functions:
 
-- `getAuth( )` : This returns the authentication handle of Firebase;
-- `signInAnonymously( )` : This allows the user to sign in anonymously.
+- `getAuth( )`: This returns the authentication handle of *Firebase*;
+- `signInAnonymously( )`: This allows the user to sign in anonymously.
 
-These two function therefore need to be imported into the Start.js file:
+These two functions therefore need to be imported in the *Start.js* file:
 
     import { getAuth, signInAnonymously } from "firebase/auth";
 
-The following code needs to be placed inside the StartScreen component (in Start.js) to initialize the Firebase authentication handler:
+The following code needs to be placed inside the *StartScreen* component (in *Start.js*) to initialize the Firebase authentication handler:
 ```
   const auth = getAuth();
 ```
