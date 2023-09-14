@@ -129,7 +129,7 @@ In parallel and because of the storage and authentication features described abo
 
 **1- Database**: To ensure the messages sent by users are stored somewhere and accessible in real-time whenever needed, a ***Firestore Database*** needs to be set up by going to *Build* > *Firestore database* (from the *Firebase* website).
 
-This database is then linked/connected to Chat app by inserting (in App.js file) the credentials provided on the *Firebase* website > *Project overview* > *Project settings* > *General settings* > *Web application* > *SDK installation and configuration*. Here's an example of the code available on *Firebase* and inserted into App.js file to make the connection:
+This database is then linked/connected to Chat app by inserting (in App.js file, inside the App component) the credentials provided on the *Firebase* website > *Project overview* > *Project settings* > *General settings* > *Web application* > *SDK installation and configuration*. Here's an example of the code available on *Firebase* and inserted into App.js file to make the connection:
 
 // Web app's *Firebase* configuration
 
@@ -150,9 +150,26 @@ This database is then linked/connected to Chat app by inserting (in App.js file)
 
     const db = getFirestore(app);
 
-**2- Storage space for media:** The same principle applies for the storage space that needs to be created to store image and audio files sent by users. The storage space is created on *Firebase* website, by going to *Build* > *Storage*.
+**2- Storage space for media:** The same principle applies for the storage space that needs to be created to store image and audio files sent by users. The storage space is created on *Firebase* website, by going to *Build* > *Storage*. This storage space is then linked/connected to Chat app by inserting (in App.js file, inside the App component) the following:
 
-**3- Authentication method:** The same principle applies for the authentication method. The authentication method  is created on *Firebase* website, by going to *Build* > *Authentication*. For Chat app, the anonymous authentication provided by *Firebase* is used.
+    const storage = getStorage(app);
+
+*`import { getStorage } from "firebase/storage";` also needs to be placed at the top of the file.
+
+**3- Authentication method:** The same principle applies for the authentication method. The authentication method  is created on *Firebase* website, by going to *Build* > *Authentication*. For Chat app, the [anonymous authentication provided by *Firebase*](https://firebase.google.com/docs/auth/web/anonymous-auth#authenticate-with-firebase-anonymously) is used. This type of authentication revolves around two functions:
+
+- `getAuth( )` : This returns the authentication handle of Firebase;
+- `signInAnonymously( )` : This allows the user to sign in anonymously.
+
+These two function therefore need to be imported into the Start.js file:
+
+    import { getAuth, signInAnonymously } from "firebase/auth";
+
+The following code needs to be placed inside the StartScreen component (in Start.js) to initialize the Firebase authentication handler:
+```
+  const auth = getAuth();
+```
+The code that allows the user to sign in anonymously can then be written within the following `signInAnonymously()` function in the component.
 
 ## App dependencies
 
