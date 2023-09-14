@@ -1,9 +1,11 @@
 //***File used to code the (+) button on the left side of the text input field to allow user to do more than just sending messages (e.g.: sharing images or location).
 
 //***Import all necessary components.
+import { useEffect } from "react";
 import { StyleSheet, TouchableOpacity, View, Text, Alert } from "react-native";
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 
@@ -16,10 +18,14 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
     const actionSheet = useActionSheet();
 
 
+    //***Variable that represents the reference to the recording object returned when calling Audio.Recording.createAsync() (variable is initialized with 'null').
+    let recordingObject = null;
+
+
     //***Function used to display the different actions users can choose when they click on the (+) button on the left side of the text input bar.
     const onActionPress = () => {
         //***Strings representing the different options that the user can choose from when they open the action sheet.
-        const options = ['Select an image from library', 'Take a photo', 'Share location', 'Cancel'];
+        const options = ['Select an image from library', 'Take a photo', 'Share location', 'Record a Sound', 'Cancel'];
         //***The 'cancelButtonIndex' variable is used to specify which option within the options array above (here 'Cancel') should be treated as the cancel option when displaying the action sheet to the user. In this case, 'options.length' is equal to 4. - 1 subtracts 1 from the total number of options, thus adjusting the index to refer to the last element in the array ('Cancel' which is at position index 3 in the 'options array' - the last one).
         const cancelButtonIndex = options.length - 1;
         //***Displays the action sheet with the specified options.
@@ -42,11 +48,18 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
                         return;
                     case 2:
                         getLocation();
+                        return;
+                    case 3:
+                        startRecording();
+                        return;
                     default:
                 }
             },
         );
     };
+
+
+    //***Codes below related to phone images library and phone camera actions.
 
 
     //***This function takes an image URI, uploads the image to Firebase Cloud Storage with a unique reference, retrieves the download URL, and sends it as a message in the chat UI.
@@ -109,6 +122,9 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
     }
 
 
+    //***Codes below related get the users phone location sharing.
+
+
     //***Function used to retrieve the device's current location and send it as a message.
     const getLocation = async () => {
         //***Prompt send to users UI to ask for location permission, and store the result in 'permissions' variable.
@@ -131,6 +147,84 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
             } else Alert.alert("Error occurred while fetching location");
         } else Alert.alert("Permissions haven't been granted.");
     }
+
+
+    //***Codes below related to recording and playing sent / received audios.
+
+
+    //***startRecording() function handles starting the recording.
+    const startRecording = async () => {
+        try {
+            //***First asking permission to use the device’s microphone.
+            let permissions = await Audio.requestPermissionsAsync();
+            //***If user give permission, code block below is triggered.
+            if (permissions?.granted) {
+                //***iOS specific config to allow recording on iPhone devices.
+                await Audio.setAudioModeAsync({
+                    allowsRecordingIOS: true,
+                    playsInSilentModeIOS: true
+                });
+                //***After user accepts permission, this code initiates the recording session.
+                Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY)
+                    .then(results => {
+                        return results.recording;
+                    }).then(recording => {
+                        recordingObject = recording;
+                        //***whenever users press on the 'Record a Sound' action, they are allow to perform two actions at that point: cancel the recording or send it. 
+                        Alert.alert('You are recording...', undefined, [
+                            //***When users press 'cancel' button, stopRecording function below is called (to stop the recording and unloads it from memory).
+                            { text: 'Cancel', onPress: () => { stopRecording() } },
+                            //***When users press 'Stop and Send' button, sendRecordedSound function below is called (to store and send the audio).
+                            {
+                                text: 'Stop and Send', onPress: () => {
+                                    sendRecordedSound()
+                                }
+                            },
+                        ],
+                            { cancelable: false }
+                        );
+                    })
+            }
+        } catch (err) {
+            Alert.alert('Failed to record!');
+        }
+    }
+
+
+    //***stopRecording() function stops the recording and unloads it from the memory.
+    const stopRecording = async () => {
+        await Audio.setAudioModeAsync({
+            allowsRecordingIOS: false,
+            playsInSilentModeIOS: false
+        });
+        await recordingObject.stopAndUnloadAsync();
+    }
+
+
+    //***sendRecordedSound() function uses the 'stopRecording' function above stop the recording and then uploads the recorded sound file from the recording object (similar way to how images are uploaded above to the Firebase Storage) and sends it.
+    const sendRecordedSound = async () => {
+        await stopRecording()
+        const uniqueRefString =
+            //***The sound file’s URI is extracted by calling the recording object’s getURI() method
+            generateReference(recordingObject.getURI());
+        const newUploadRef = ref(storage, uniqueRefString);
+        const response = await fetch(recordingObject.getURI());
+        const blob = await response.blob();
+        uploadBytes(newUploadRef, blob).then(async (snapshot) => {
+            const soundURL = await getDownloadURL(snapshot.ref)
+            //***When the message is sent using onSend(), the audio key is sets of the Gifted Chat message object.
+            onSend({ audio: soundURL })
+        });
+    }
+
+
+    //***useEffect used to to make sure that the recording object gets unloaded from the memory in case the user started a recording session but chose to close the app instead of pressing one of the two Alert buttons ('Cancel' or 'Stop and Send').
+    useEffect(() => {
+        return () => {
+            if (recordingObject) recordingObject.stopAndUnloadAsync();
+        }
+    }, []);
+
 
 
     return (

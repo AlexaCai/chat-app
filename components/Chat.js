@@ -2,9 +2,10 @@
 
 //***Import all necessary components.
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, View, KeyboardAvoidingView, Platform, TouchableOpacity, Text } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import { Audio } from "expo-av";
 import CustomActions from './CustomActions';
 import MapView from 'react-native-maps';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,6 +19,11 @@ const ChatScreen = ({ route, navigation, db, isConnected, storage }) => {
     //***'messages' state stores the chat messages that users send and receive during their chat sessions. Each message is represented as an object in the array, and the array holds a history of all chat messages.
     //***'setMessage' is used to update the 'messages' state. When a new message is sent or received, it is appended to the 'messages' array using the 'setMessages' function. This ensures that the chat interface displays the most up-to-date messages.
     const [messages, setMessages] = useState([]);
+
+
+    //***Reference the currently playing sound. This is used (in pair with renderAudioBubble function below) ensures that the sound file doesn’t keep playing in the background if users close the app.
+    let soundObject = null;
+
 
     //***Variable is used to keep a reference to the unsubscribe function returned by the onSnapshot listener from Firebase Firestore.
     let unsubMessages;
@@ -54,9 +60,8 @@ const ChatScreen = ({ route, navigation, db, isConnected, storage }) => {
 
         //***Used to clean up code and stops the real-time message listener when the chat screen is no longer in use to avoid memory leaks (it’s best practice to stop listeners if they’re no longer needed to avoid memory leak - memory leak occurs when data that isn't needed still occupies memory without intending to do so).
         return () => {
-            if (unsubMessages) {
-                unsubMessages();
-            }
+            if (unsubMessages) unsubMessages();
+            if (soundObject) soundObject.unloadAsync();
         }
         //***'isConnected' prop as a dependency allows the component to call useEffect whenever the 'isConnected' value change (so whenever user lost / retrieve internet connection). Then the code can decide in real time whether to fetch data from AsyncStorage or the Firestore Database.
     }, [isConnected]);
@@ -131,6 +136,32 @@ const ChatScreen = ({ route, navigation, db, isConnected, storage }) => {
     }
 
 
+    //***Function used to render a message bubble that contains a button to PLAY the sound whenever there’s a message with an audio-file URL (returns a view containing a button that plays the sound file when it’s pressed).
+    const renderAudioBubble = (props) => {
+        return <View {...props}>
+            <TouchableOpacity
+                style={{
+                    backgroundColor: "#FF0", borderRadius: 10, margin: 5
+                }}
+                onPress={async () => {
+                    //***if (soundObject) soundObject.unloadAsync() is needed right before creating the sound object because this unloads the previous sound object from the memory if the user tries to play another audio message.
+                    if (soundObject) soundObject.unloadAsync();
+                    const { sound } = await Audio.Sound.createAsync({
+                        uri:
+                            props.currentMessage.audio
+                    });
+                    soundObject = sound;
+                    await sound.playAsync();
+                }}>
+                <Text style={{
+                    textAlign: "center", color: 'black', padding:
+                        5
+                }}>Play Sound</Text>
+            </TouchableOpacity>
+        </View>
+    }
+
+
     //***Used to change the messages bubble color.
     //***The returned 'Bubble' component is from Gifted Chat’s own package so its necessary to first import it (the Bubble package).
     const renderBubble = (props) => {
@@ -166,6 +197,8 @@ const ChatScreen = ({ route, navigation, db, isConnected, storage }) => {
                 renderActions={renderCustomActions}
                 //***Used to display map location in the chat screen UI.
                 renderCustomView={renderCustomView}
+                //***Used to display in the chat screen UI a button in audio messages that plays the sound file when it’s pressed.
+                renderMessageAudio={renderAudioBubble}
                 //***Provide GitedChat the information about the sender.
                 user={{
                     _id: userID,
