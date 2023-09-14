@@ -173,7 +173,7 @@ The code that allows the user to sign in anonymously can then be written within 
 
 ## App dependencies
 
-Since Chat app is built with React Native and integrate several features (sharing location, sending audios, storage logics, etc.) the following dependencies needs to be installed for the app to work:
+Since Chat app is built with React Native and integrate several features (sharing location, sending audios, storage logics, etc.) the following dependencies need to be installed:
 
   - react-navigation/native: ^6.1.7,
  -  react-navigation/native-stack: ^6.9.13,
