@@ -44,7 +44,6 @@ const StartScreen = ({ navigation }) => {
                                 name: name,
                                 selectedColor: selectedColor,
                             });
-                            Alert.alert("Signed in Successfully!");
                         })
                         .catch(error => {
                             console.error("Error storing user ID locally:", error);
