@@ -15,7 +15,6 @@ const ChatScreen = ({ route, navigation, db, isConnected, storage }) => {
     const [messages, setMessages] = useState([]);
 
 
-    //***Reference the currently playing sound. 
     let soundObject = null;
 
 
@@ -40,7 +39,6 @@ const ChatScreen = ({ route, navigation, db, isConnected, storage }) => {
                 cacheMessages(newMessages);
                 setMessages(newMessages);
             });
-            //***Fetch messages from the cache to display on users UI only if there’s no network connection.
         } else loadCachedMessages();
 
         //***Used to clean up code and stops the real-time message listener when the chat screen is no longer in use to avoid memory leaks (it’s best practice to stop listeners if they’re no longer needed to avoid memory leak - memory leak occurs when data that isn't needed still occupies memory without intending to do so).
@@ -66,7 +64,6 @@ const ChatScreen = ({ route, navigation, db, isConnected, storage }) => {
     }
 
 
-    //***Function to save/show sent messages in the Firestore database.
     const onSend = (messages) => {
         setMessages(previousMessages => GiftedChat.append(previousMessages, messages))
         addDoc(collection(db, "messages"), messages[0])
