@@ -19,7 +19,6 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
     let recordingObject = null;
 
 
-    //***Function used to display the different actions users can choose when they click on the (+) button on the left side of the text input bar.
     const onActionPress = () => {
         const options = ['Select an image from library', 'Take a photo', 'Share location', 'Record a Sound', 'Cancel'];
         const cancelButtonIndex = options.length - 1;
@@ -103,7 +102,6 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
             const location = await Location.getCurrentPositionAsync({});
             if (location) {
                 onSend({
-                    //***The object assigned to the location property sent in 'onSend' contains all the data necessary for 'renderCustomView' function in Chat.js to render the MapView in a message bubble in the chat UI screen.
                     location: {
                         longitude: location.coords.longitude,
                         latitude: location.coords.latitude,
@@ -126,7 +124,6 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
                     allowsRecordingIOS: true,
                     playsInSilentModeIOS: true
                 });
-                //***After user accepts permission, this code initiates the recording session.
                 Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY)
                     .then(results => {
                         return results.recording;

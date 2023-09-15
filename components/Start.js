@@ -17,11 +17,9 @@ const StartScreen = ({ navigation }) => {
     const [selectedColor, setSelectedColor] = useState('');
     const image = require('../img/BackgroundImage.png');
 
-    //***Function call when user click 'Start chatting' button on the start screen.
     const signInUser = async () => {
         let userId = await AsyncStorage.getItem("userId");
 
-        //***If there's no user ID locally stored on the device (first time user), a new user ID is assigned to the user, and this user ID is stored locally on his device. 
         if (!userId) {
             signInAnonymously(auth)
                 .then(result => {
@@ -43,7 +41,6 @@ const StartScreen = ({ navigation }) => {
                     console.error("Error signing in anonymously:", error);
                     Alert.alert("Unable to sign in, try again later.");
                 });
-            //***If user is not at his first visit on the app, he already has his user ID stored locally to sign in. This user ID is used.
         } else {
             navigation.navigate("ChatScreen", {
                 userID: userId,
@@ -99,7 +96,7 @@ const StartScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
-            {/* Code logic ensuring that if the platform’s OS used to run the app is iOS, the component KeyboardAvoidingView is added (which will ensure that when users launch their keyboard to enter any text, the keyboard won't hides the input field or the background color picker section - problem only occuring with Iphones / iOS mobile models). If OS is not an iOS, logic tells to insert nothing. */}
+            {/* Code ensuring that if the platform’s OS used to run the app is iOS, the component KeyboardAvoidingView is added (which will ensure that when users launch their keyboard to enter any text, the keyboard won't hides the input field or the background color picker section - problem only occuring with Iphones / iOS mobile models). If OS is not an iOS, logic tells to insert nothing. */}
             {Platform.OS === 'ios' ? <KeyboardAvoidingView behavior="padding" /> : null}
         </View>
     );
